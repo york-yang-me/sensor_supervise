@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div id="Temperature"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    Highcharts.setOptions({
+      global: {useUTC: false } //取消使用UTC时间
+    });
+    Highcharts.chart("Temperature", {
+      chart: {
+        type: 'spline', //折线图
+        events: {
+          load: function () { //每小时更新一次数据
+            var series = this.series[0];
+            setInterval(function (){
+              $.ajax({ //异步获取数据
+                  url:'/sensor_data/get_temperature/',
+                  success: function(data) {
+                      var y = data.s1[data.s1.length-1];
+                      series.addPoint([y.time,Temperature], true, true);
+                  },
+              });
+            },1000*3600);
+          },
+        },
+      },
+      title: {text: 'Room temperature for one day'},
+      xAxis: {
+          title: {
+              text: 'Hour'
+          },
+          type: 'category',
+          min: 0,
+          max: 24
+      },
+      yAxis: {title: {text: 'Temperature'}},
+      rangeSelector: {
+            allButtonsEnabled: true,
+            selected: 2
+        },
+      navigator:{
+            enabled:true
+        },
+      scrollbar: {
+        enabled: true
+      },
+      plotOptions: {
+		spline: {
+			dataLabels: {
+				enabled: true,
+                formatter: function() {
+                    return this.y + '°C'; 	// 开启数据标签
+                },
+            },
+        },
+	  },
+      series: [{
+                name: 'Temperature',
+                data: {{res|safe}},
+            }],
+    });
+</script>
+{%endblock %}
