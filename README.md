@@ -26,7 +26,7 @@
     ```
     python manage.py migrate # 初始化数据库
     python manage.py makemigrations sensor_data # 激活数据库模型
-    python manage.py createsuperuser # 创建管理员(输入对应账号密码即可)
+    python manage.py createsuperuser # 创建管理员(输入对应账号密码即可已存在用户：admin 密码：django4test)
     python manage.py runserver 0.0.0.0:8000 # 在8000端口监听所有服务器的公开IP
     ```
 ### Step 2 树莓派4B
