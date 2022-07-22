@@ -6,8 +6,8 @@ from django.contrib import admin
 from .models import *
 
 
-class TemperatureAdmin(admin.ModelAdmin):
-    list_display = ('id', 'capTime', 'capHour', 'capTemperature')
+class DHT11DataAdmin(admin.ModelAdmin):
+    list_display = ('id', 'capTime', 'capHour', 'capTemperature', 'capHumidity')
 
 
-admin.site.register(Temperature, TemperatureAdmin)
+admin.site.register(DHT11Data, DHT11DataAdmin)

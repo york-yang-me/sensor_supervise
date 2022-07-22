@@ -6,8 +6,9 @@ import time
 import RPi.GPIO as GPIO
 
 data = []  # 用来存放读取到的数据
-channel = 2  # DHT11的data引脚连接到的树莓派的GPIO引脚，使用BCM编号 这边我的数据引脚对应物理引脚的3号位
+channel = 2  # DHT11的data引脚连接到的树莓派的GPIO引脚，使用BCM编号
 temperature_sum = 0  # 用来存放单次执行程序获取温度后的温度值总和
+humidity_sum = 0  # 用来存放单次执行程序获取湿度后的湿度值总和
 count = 0  # 用来判断记载了几次有效数据
 
 
@@ -81,7 +82,7 @@ class ComplexEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 
-for i in range(10):
+for j in range(10):
     # 记录10次数据
     GPIO.setmode(GPIO.BCM)  # 设置为BCM编号模式
     GPIO.setwarnings(False)
@@ -114,19 +115,20 @@ for i in range(10):
 
     check_data = humidity_int + humidity_point + temperature_int + temperature_point
 
-    if check == check_data and temperature != 0 and humidity != 0:  # 判断数据是否正常
+    if check == check_data and 20 <= temperature <= 40 and 50 <= humidity <= 80:  # 判断数据是否正常
         print("temperature :", temperature, "*C, humidity :", humidity, "%")
-        if 20 <= temperature <= 40:  # 判断温度是否正常(有时可能会因为传感器等不可控因素输出异常温度)
-            res = '{temperature:%.1f}' % temperature
-            temperature_sum += temperature
-            count += 1
+        res = '{temperature:%.1f humidity:%.lf}' % (temperature, humidity)
+        temperature_sum += temperature
+        humidity_sum += humidity
+        count += 1
+
         import json
 
         with open('data.txt', 'a') as outfile:
             json.dump(res, outfile)
         out_test = open('data.txt', 'a')
         out_test.write(res)
-        out_test.close
+        out_test.close()
     else:
         print("error")
 
@@ -135,10 +137,12 @@ for i in range(10):
 
 # Post Data to webpage
 rqs_headers = {'Content-Type': 'application/json'}
-req_url = 'http://192.168.0.108:8000/sensor_data/temperature_api/'
+req_url = 'http://127.0.0.1:8000/sensor_data/dht11_api'
 new_data = {
     "capTime": datetime.datetime.now(),
-    "capTemperature": '%.1f' % (temperature_sum / count)
+    "capHour": datetime.datetime.now().hour,
+    "capTemperature": '%.1f' % (temperature_sum / count),
+    "capHumidity": '%.1f' % (humidity_sum / count)
 }
 
 test_data = json.dumps(new_data, cls=ComplexEncoder)
@@ -146,4 +150,5 @@ test_data = json.dumps(new_data, cls=ComplexEncoder)
 response = requests.post(url=req_url, headers=rqs_headers, data=test_data)
 
 temperature_sum = 0  # 运算结束后置0
+humidity_sum = 0  # 运算结束后置0
 count = 0
